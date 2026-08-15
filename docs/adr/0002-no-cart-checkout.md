@@ -1,0 +1,3 @@
+# Direct-buy checkout, no shopping cart
+
+Considered a conventional multi-item cart versus a single-item "buy now" flow. Chose direct-buy: one Order always maps to exactly one Nominal plus one destination account plus one Bukti Pembayaran. This matches how real top-up marketplaces work (each item has its own distinct destination — a game User ID, a phone number — so batching items into one cart adds little value) and keeps the Order model simpler, which fits the project's "speed/instant fulfillment" positioning. A future reader should not assume a cart/multi-item Order is coming; adding one would require reworking Order to support line items.

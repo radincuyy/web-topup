@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import {
   Card,
   CardContent,
@@ -6,7 +8,19 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export default async function AuthErrorPage({
+export default function AuthErrorPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  return (
+    <Suspense fallback={<Card />}>
+      <AuthErrorContent searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function AuthErrorContent({
   searchParams,
 }: {
   searchParams: Promise<{ error?: string }>;

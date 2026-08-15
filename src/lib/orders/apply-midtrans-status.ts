@@ -20,9 +20,12 @@ export const RECOGNIZED_MIDTRANS_STATUSES = new Set<MidtransTransactionStatus>([
 /**
  * Applies a Midtrans transaction status to one Order: computes the next
  * Status Pesanan via the transisiStatusPesanan seam, persists it, and — when
- * the Order just became Dibayar — runs the Diproses -> Selesai simulated
- * delivery delay. Shared by the webhook route and the Admin manual
- * Sinkronisasi Status action so this sequencing lives in exactly one place.
+ * the Order just became Dibayar — auto-advances it to Diproses (payment
+ * confirmed, delivery now owed). It stops there: Diproses -> Selesai is a
+ * separate Admin action (Tandai Terkirim, see pesanan-actions.ts) — only a
+ * human who actually delivered the credit can attest that happened. See
+ * docs/adr/0005-manual-fulfillment.md. Shared by the webhook route and the
+ * Admin Sinkronisasi Status action so this sequencing lives in one place.
  */
 export async function applyMidtransStatus(
   supabase: SupabaseClient<Database>,
@@ -43,6 +46,10 @@ export async function applyMidtransStatus(
     throw e;
   }
 
+  if (nextStatus === "dibayar") {
+    nextStatus = transisiStatusPesanan("dibayar", { type: "mulai_proses" });
+  }
+
   await supabase
     .from("orders")
     .update({
@@ -52,28 +59,6 @@ export async function applyMidtransStatus(
       gagal_reason: nextStatus === "gagal" ? transactionStatus : undefined,
     })
     .eq("id", order.id);
-
-  if (nextStatus === "dibayar") {
-    const diprosesStatus = transisiStatusPesanan("dibayar", {
-      type: "mulai_proses",
-    });
-    await supabase
-      .from("orders")
-      .update({ status: diprosesStatus })
-      .eq("id", order.id);
-
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-
-    const selesaiStatus = transisiStatusPesanan(diprosesStatus, {
-      type: "kredit_terkirim",
-    });
-    await supabase
-      .from("orders")
-      .update({ status: selesaiStatus })
-      .eq("id", order.id);
-
-    return { applied: true, nextStatus: selesaiStatus };
-  }
 
   return { applied: true, nextStatus };
 }

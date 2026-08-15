@@ -205,6 +205,8 @@ export type Database = {
         Returns: {
           created_at: string
           customer_email: string
+          destination_data: Json
+          destination_field_type: string
           harga: number
           id: string
           midtrans_order_id: string

@@ -114,14 +114,20 @@ export function CheckoutForm({
                   onClick={() => setSelectedNominal(n.id)}
                   aria-pressed={selectedNominal === n.id}
                   className={cn(
-                    "rounded-lg border px-3 py-2 text-left text-sm transition-colors",
+                    "rounded-lg border-2 px-3 py-2 text-left text-sm transition-all",
                     selectedNominal === n.id
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:bg-muted",
+                      ? "border-primary bg-primary/10 ring-2 ring-primary/25"
+                      : "border-border hover:border-primary/40 hover:bg-muted",
                   )}
                 >
                   <div className="font-medium">{n.nama}</div>
-                  <div className="text-muted-foreground">
+                  <div
+                    className={
+                      selectedNominal === n.id
+                        ? "text-primary"
+                        : "text-muted-foreground"
+                    }
+                  >
                     Rp{n.harga.toLocaleString("id-ID")}
                   </div>
                 </button>

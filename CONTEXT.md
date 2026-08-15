@@ -13,11 +13,11 @@ The user role that browses the catalog, places Orders, and receives delivered To
 _Avoid_: Buyer, pembeli, user (when role matters, use Customer specifically)
 
 **Admin**:
-The user role that manages the product catalog (Kategori/Produk/Nominal/Ketersediaan), monitors Orders, can Dibatalkan an Order before Selesai, and can trigger a manual Sinkronisasi Status against Midtrans for a specific Order. Does not verify payments manually — that is Notifikasi Midtrans's job.
+The user role that manages the product catalog (Kategori/Produk/Nominal/Ketersediaan), monitors Orders, manually fulfills Orders that reach Diproses (delivers the Top Up credit to the destination account, then marks the Order Terkirim), can Dibatalkan an Order before Selesai, and can trigger a manual Sinkronisasi Status against Midtrans for a specific Order. Does not verify payments manually — that is Notifikasi Midtrans's job — but delivery *is* manual, matching how small Indonesian top-up/PPOB sellers actually operate (see docs/adr/0005-manual-fulfillment.md).
 _Avoid_: Seller, operator
 
 **Order**:
-A single purchase by a Customer, from product selection through credit delivery to the destination account. Moves through Order Status: Menunggu Pembayaran → Dibayar → Diproses → Selesai, branching to Gagal or Dibatalkan. Dibayar and payment-driven Gagal are driven by Notifikasi Midtrans; Diproses → Selesai is a short simulated delay representing credit delivery to the destination account, distinct from payment receipt.
+A single purchase by a Customer, from product selection through credit delivery to the destination account. Moves through Order Status: Menunggu Pembayaran → Dibayar → Diproses → Selesai, branching to Gagal or Dibatalkan. Dibayar is driven by Notifikasi Midtrans and immediately auto-advances to Diproses (payment confirmed, delivery now owed). Diproses → Selesai is **not** automatic — it only happens when an Admin manually delivers the credit and marks the Order Terkirim. Diproses can sit for real, unbounded time, exactly like it would at a small manual top-up seller.
 _Avoid_: Transaksi, pembelian, transaction, purchase
 
 **Kategori** (Category):
@@ -53,5 +53,9 @@ A Tersedia/Tidak Tersedia toggle an Admin sets per Nominal, controlling whether 
 _Avoid_: Stok, stock (this is an on/off flag, not a counted inventory quantity)
 
 **Sinkronisasi Status** (Manual Status Sync):
-An Admin-triggered action on a single Order that queries Midtrans's transaction status API directly, used as a fallback when a Notifikasi Midtrans webhook is missed or delayed.
+An Admin-triggered action on a single Order that queries Midtrans's transaction status API directly, used as a fallback when a Notifikasi Midtrans webhook is missed or delayed. Only affects the payment side (Menunggu Pembayaran → Dibayar/Gagal) — it never advances Diproses → Selesai, since that is a delivery fact only an Admin who actually delivered the credit can attest to.
 _Avoid_: Retry, refresh (keep the domain term; it queries Midtrans, it doesn't retry payment)
+
+**Tandai Terkirim** (Mark Delivered):
+An Admin-triggered action on a single Order, moving it from Diproses to Selesai. The Admin performs this only after actually delivering the Top Up credit to the destination account shown on the Order — the system has no way to verify delivery itself.
+_Avoid_: Selesaikan, complete (keep the domain term; it specifically means the Admin attests delivery happened)

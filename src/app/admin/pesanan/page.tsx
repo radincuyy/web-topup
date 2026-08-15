@@ -1,5 +1,6 @@
 import { getAllPesananAdmin } from "@/lib/admin/get-pesanan-admin";
 import { PesananRowActions } from "@/components/features/admin/pesanan-row-actions";
+import { formatDestinationData } from "@/lib/orders/format-destination";
 import {
   STATUS_PESANAN_LABEL,
   STATUS_PESANAN_VARIANT,
@@ -28,6 +29,7 @@ export default async function AdminPesananPage() {
           <TableRow>
             <TableHead>Customer</TableHead>
             <TableHead>Produk</TableHead>
+            <TableHead>Tujuan</TableHead>
             <TableHead>Harga</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Aksi</TableHead>
@@ -36,18 +38,33 @@ export default async function AdminPesananPage() {
         <TableBody>
           {pesanan.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground">
+              <TableCell colSpan={6} className="text-center text-muted-foreground">
                 Belum ada pesanan.
               </TableCell>
             </TableRow>
           ) : (
             pesanan.map((p) => (
               <TableRow key={p.id}>
-                <TableCell className="text-muted-foreground">
+                <TableCell
+                  className="max-w-[160px] truncate text-muted-foreground"
+                  title={p.customer_email}
+                >
                   {p.customer_email}
                 </TableCell>
                 <TableCell className="font-medium">
                   {p.produk_nama} — {p.nominal_nama}
+                </TableCell>
+                <TableCell
+                  className="max-w-[180px] truncate text-muted-foreground"
+                  title={formatDestinationData(
+                    p.destination_field_type,
+                    p.destination_data,
+                  )}
+                >
+                  {formatDestinationData(
+                    p.destination_field_type,
+                    p.destination_data,
+                  )}
                 </TableCell>
                 <TableCell>Rp{p.harga.toLocaleString("id-ID")}</TableCell>
                 <TableCell>

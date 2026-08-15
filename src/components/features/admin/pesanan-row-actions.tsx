@@ -1,11 +1,21 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { RefreshCw } from "lucide-react";
+import { MoreHorizontal, PackageCheck, RefreshCw, Ban } from "lucide-react";
 
-import { cancelOrderAdmin, syncOrderStatusAdmin } from "@/lib/admin/pesanan-actions";
+import {
+  cancelOrderAdmin,
+  syncOrderStatusAdmin,
+  tandaiTerkirimAdmin,
+} from "@/lib/admin/pesanan-actions";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,7 +25,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 const TERMINAL_STATUSES = new Set(["selesai", "gagal", "dibatalkan"]);
@@ -28,6 +37,7 @@ export function PesananRowActions({
   status: string;
 }) {
   const [isPending, startTransition] = useTransition();
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
 
   function handleSync() {
     startTransition(async () => {
@@ -44,6 +54,17 @@ export function PesananRowActions({
     });
   }
 
+  function handleTandaiTerkirim() {
+    startTransition(async () => {
+      const result = await tandaiTerkirimAdmin(orderId);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Pesanan ditandai terkirim.");
+    });
+  }
+
   function handleCancel() {
     startTransition(async () => {
       const result = await cancelOrderAdmin(orderId);
@@ -56,28 +77,39 @@ export function PesananRowActions({
   }
 
   return (
-    <div className="flex justify-end gap-2">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleSync}
-        disabled={isPending}
-      >
-        <RefreshCw data-icon="inline-start" />
-        Sinkronisasi
-      </Button>
-      <AlertDialog>
-        <AlertDialogTrigger
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger
           render={
-            <Button
-              variant="destructive"
-              size="sm"
-              disabled={isPending || TERMINAL_STATUSES.has(status)}
-            />
+            <Button variant="ghost" size="icon-sm" disabled={isPending} />
           }
         >
-          Batalkan
-        </AlertDialogTrigger>
+          <MoreHorizontal />
+          <span className="sr-only">Aksi pesanan</span>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={handleSync}>
+            <RefreshCw />
+            Sinkronisasi Status
+          </DropdownMenuItem>
+          {status === "diproses" ? (
+            <DropdownMenuItem onClick={handleTandaiTerkirim}>
+              <PackageCheck />
+              Tandai Terkirim
+            </DropdownMenuItem>
+          ) : null}
+          <DropdownMenuItem
+            variant="destructive"
+            disabled={TERMINAL_STATUSES.has(status)}
+            onClick={() => setConfirmCancelOpen(true)}
+          >
+            <Ban />
+            Batalkan
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AlertDialog open={confirmCancelOpen} onOpenChange={setConfirmCancelOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Batalkan pesanan ini?</AlertDialogTitle>
@@ -94,6 +126,6 @@ export function PesananRowActions({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 }

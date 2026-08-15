@@ -48,6 +48,45 @@ export async function cancelOrderAdmin(orderId: string) {
   return { ok: true };
 }
 
+export async function tandaiTerkirimAdmin(orderId: string) {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const { data: order } = await supabase
+    .from("orders")
+    .select("id, status")
+    .eq("id", orderId)
+    .maybeSingle();
+
+  if (!order) {
+    return { error: "Pesanan tidak ditemukan." };
+  }
+
+  let nextStatus: string;
+  try {
+    nextStatus = transisiStatusPesanan(order.status as never, {
+      type: "kredit_terkirim",
+    });
+  } catch (e) {
+    if (e instanceof TransisiTidakValidError) {
+      return { error: e.message };
+    }
+    throw e;
+  }
+
+  const { error } = await supabase
+    .from("orders")
+    .update({ status: nextStatus })
+    .eq("id", orderId);
+
+  if (error) {
+    return { error: "Gagal menandai pesanan sebagai terkirim." };
+  }
+
+  revalidatePath("/admin/pesanan");
+  return { ok: true };
+}
+
 export async function syncOrderStatusAdmin(orderId: string) {
   await requireAdmin();
   const supabase = await createClient();

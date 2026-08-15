@@ -9,12 +9,12 @@ export const STATUS_PESANAN_LABEL: Record<string, string> = {
 
 export const STATUS_PESANAN_VARIANT: Record<
   string,
-  "default" | "secondary" | "destructive" | "outline"
+  "default" | "secondary" | "destructive" | "outline" | "success" | "warning"
 > = {
   menunggu_pembayaran: "outline",
-  dibayar: "secondary",
-  diproses: "secondary",
-  selesai: "default",
+  dibayar: "default",
+  diproses: "warning",
+  selesai: "success",
   gagal: "destructive",
   dibatalkan: "destructive",
 };

@@ -22,16 +22,32 @@ export async function getKatalog() {
 
   const supabase = createPublicClient();
 
-  const [{ data: kategori }, { data: produk }] = await Promise.all([
-    supabase.from("kategori").select("id, slug, nama, urutan").order("urutan"),
-    supabase
-      .from("produk")
-      .select("id, slug, nama, kategori_id, destination_field_type, urutan")
-      .order("urutan"),
-  ]);
+  const [{ data: kategori }, { data: produk }, { data: nominal }] =
+    await Promise.all([
+      supabase.from("kategori").select("id, slug, nama, urutan").order("urutan"),
+      supabase
+        .from("produk")
+        .select("id, slug, nama, kategori_id, destination_field_type, urutan")
+        .order("urutan"),
+      supabase
+        .from("nominal")
+        .select("produk_id, harga")
+        .eq("tersedia", true),
+    ]);
+
+  const hargaMinPerProduk = new Map<string, number>();
+  for (const n of nominal ?? []) {
+    const current = hargaMinPerProduk.get(n.produk_id);
+    if (current === undefined || n.harga < current) {
+      hargaMinPerProduk.set(n.produk_id, n.harga);
+    }
+  }
 
   return {
     kategori: kategori ?? [],
-    produk: produk ?? [],
+    produk: (produk ?? []).map((p) => ({
+      ...p,
+      hargaMulaiDari: hargaMinPerProduk.get(p.id) ?? null,
+    })),
   };
 }

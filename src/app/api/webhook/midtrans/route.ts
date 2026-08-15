@@ -1,22 +1,12 @@
 import { NextResponse } from "next/server";
 
-import { verifyMidtransSignature } from "@/lib/midtrans/verify";
 import {
-  TransisiTidakValidError,
-  transisiStatusPesanan,
-  type MidtransTransactionStatus,
-  type StatusPesanan,
-} from "@/lib/orders/status";
+  RECOGNIZED_MIDTRANS_STATUSES,
+  applyMidtransStatus,
+} from "@/lib/orders/apply-midtrans-status";
+import { verifyMidtransSignature } from "@/lib/midtrans/verify";
+import type { MidtransTransactionStatus } from "@/lib/orders/status";
 import { createServiceClient } from "@/lib/supabase/service";
-
-const RECOGNIZED_STATUSES = new Set<MidtransTransactionStatus>([
-  "pending",
-  "settlement",
-  "capture",
-  "deny",
-  "cancel",
-  "expire",
-]);
 
 export async function POST(request: Request) {
   const payload = await request.json();
@@ -67,7 +57,12 @@ export async function POST(request: Request) {
     effectiveStatus = "pending";
   }
 
-  if (!RECOGNIZED_STATUSES.has(effectiveStatus as MidtransTransactionStatus)) {
+  if (
+    !RECOGNIZED_MIDTRANS_STATUSES.has(
+      effectiveStatus as MidtransTransactionStatus,
+    )
+  ) {
+    // Nothing we act on (e.g. refund) — acknowledge so Midtrans stops retrying.
     return NextResponse.json({ ok: true });
   }
 
@@ -86,47 +81,16 @@ export async function POST(request: Request) {
     );
   }
 
-  let nextStatus: StatusPesanan;
-  try {
-    nextStatus = transisiStatusPesanan(order.status as StatusPesanan, {
-      type: "notifikasi_midtrans",
-      transactionStatus: effectiveStatus as MidtransTransactionStatus,
-    });
-  } catch (e) {
-    if (e instanceof TransisiTidakValidError) {
-      return NextResponse.json({ ok: true, note: e.message });
-    }
-    throw e;
-  }
+  const result = await applyMidtransStatus(
+    supabase,
+    order,
+    effectiveStatus as MidtransTransactionStatus,
+    { transactionId, paymentType },
+  );
 
-  await supabase
-    .from("orders")
-    .update({
-      status: nextStatus,
-      midtrans_transaction_id: transactionId,
-      metode_pembayaran: paymentType,
-      gagal_reason: nextStatus === "gagal" ? effectiveStatus : undefined,
-    })
-    .eq("id", order.id);
-
-  if (nextStatus === "dibayar") {
-    const diprosesStatus = transisiStatusPesanan("dibayar", {
-      type: "mulai_proses",
-    });
-    await supabase
-      .from("orders")
-      .update({ status: diprosesStatus })
-      .eq("id", order.id);
-
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-
-    const selesaiStatus = transisiStatusPesanan(diprosesStatus, {
-      type: "kredit_terkirim",
-    });
-    await supabase
-      .from("orders")
-      .update({ status: selesaiStatus })
-      .eq("id", order.id);
+  if (!result.applied) {
+    // Order already moved on (duplicate/late webhook) — acknowledge, don't retry.
+    return NextResponse.json({ ok: true, note: result.note });
   }
 
   return NextResponse.json({ ok: true });

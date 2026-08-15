@@ -1,4 +1,4 @@
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/supabase/types";
@@ -10,9 +10,14 @@ function createPublicClient() {
   );
 }
 
+export function produkCacheTag(slug: string) {
+  return `produk:${slug}`;
+}
+
 export async function getProdukBySlug(slug: string) {
   "use cache";
   cacheLife("minutes");
+  cacheTag(produkCacheTag(slug));
 
   const supabase = createPublicClient();
 

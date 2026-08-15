@@ -1,7 +1,12 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import {
+  STATUS_PESANAN_LABEL,
+  STATUS_PESANAN_VARIANT,
+} from "@/lib/orders/status-label";
 import {
   Card,
   CardContent,
@@ -10,15 +15,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
-const STATUS_LABEL: Record<string, string> = {
-  menunggu_pembayaran: "Menunggu Pembayaran",
-  dibayar: "Dibayar",
-  diproses: "Diproses",
-  selesai: "Selesai",
-  gagal: "Gagal",
-  dibatalkan: "Dibatalkan",
-};
 
 export default function PesananPage({
   params,
@@ -62,18 +58,28 @@ async function PesananDetail({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          {order.produk?.nama} — {order.nominal_nama}
-        </CardTitle>
-        <CardDescription>
-          Rp{order.harga.toLocaleString("id-ID")}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Badge>{STATUS_LABEL[order.status] ?? order.status}</Badge>
-      </CardContent>
-    </Card>
+    <div className="flex flex-col gap-4">
+      <Link
+        href="/pesanan"
+        className="text-sm text-muted-foreground hover:text-foreground"
+      >
+        ← Pesanan Saya
+      </Link>
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {order.produk?.nama} — {order.nominal_nama}
+          </CardTitle>
+          <CardDescription>
+            Rp{order.harga.toLocaleString("id-ID")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Badge variant={STATUS_PESANAN_VARIANT[order.status] ?? "outline"}>
+            {STATUS_PESANAN_LABEL[order.status] ?? order.status}
+          </Badge>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

@@ -22,8 +22,29 @@ export async function UserNav() {
     );
   }
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.sub as string)
+    .maybeSingle();
+
   return (
     <div className="flex items-center gap-3">
+      {profile?.role === "admin" ? (
+        <Link
+          href="/admin/pesanan"
+          className={buttonVariants({ variant: "ghost", size: "sm" })}
+        >
+          Admin
+        </Link>
+      ) : (
+        <Link
+          href="/pesanan"
+          className={buttonVariants({ variant: "ghost", size: "sm" })}
+        >
+          Pesanan Saya
+        </Link>
+      )}
       <span className="text-sm text-muted-foreground">{user.email}</span>
       <form action={signOut}>
         <Button variant="outline" size="sm" type="submit">

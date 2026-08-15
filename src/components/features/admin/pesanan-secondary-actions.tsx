@@ -2,13 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { MoreHorizontal, PackageCheck, RefreshCw, Ban } from "lucide-react";
+import { MoreHorizontal, RefreshCw, Ban } from "lucide-react";
 
-import {
-  cancelOrderAdmin,
-  syncOrderStatusAdmin,
-  tandaiTerkirimAdmin,
-} from "@/lib/admin/pesanan-actions";
+import { cancelOrderAdmin, syncOrderStatusAdmin } from "@/lib/admin/pesanan-actions";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -29,7 +25,12 @@ import {
 
 const TERMINAL_STATUSES = new Set(["selesai", "gagal", "dibatalkan"]);
 
-export function PesananRowActions({
+/**
+ * Sync + Batalkan — rare/non-primary actions kept behind a menu, unlike
+ * Tandai Terkirim (see tandai-terkirim-button.tsx). Used both in the
+ * Pesanan list rows and the order detail page.
+ */
+export function PesananSecondaryActions({
   orderId,
   status,
 }: {
@@ -51,17 +52,6 @@ export function PesananRowActions({
         return;
       }
       toast.success(`Status diperbarui: ${result.nextStatus}`);
-    });
-  }
-
-  function handleTandaiTerkirim() {
-    startTransition(async () => {
-      const result = await tandaiTerkirimAdmin(orderId);
-      if (result.error) {
-        toast.error(result.error);
-        return;
-      }
-      toast.success("Pesanan ditandai terkirim.");
     });
   }
 
@@ -92,12 +82,6 @@ export function PesananRowActions({
             <RefreshCw />
             Sinkronisasi Status
           </DropdownMenuItem>
-          {status === "diproses" ? (
-            <DropdownMenuItem onClick={handleTandaiTerkirim}>
-              <PackageCheck />
-              Tandai Terkirim
-            </DropdownMenuItem>
-          ) : null}
           <DropdownMenuItem
             variant="destructive"
             disabled={TERMINAL_STATUSES.has(status)}

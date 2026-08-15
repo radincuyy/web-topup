@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { SiteHeader } from "@/components/layout/site-header";
+import { SiteFooter } from "@/components/layout/site-footer";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -17,7 +18,7 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Top Up",
+  title: "Cudatop",
   description: "Top up game dan pulsa, instan sampai ke akun tujuan.",
 };
 
@@ -37,6 +38,7 @@ export default function RootLayout({
         >
           <SiteHeader />
           {children}
+          <SiteFooter />
           <Toaster />
         </ThemeProvider>
       </body>

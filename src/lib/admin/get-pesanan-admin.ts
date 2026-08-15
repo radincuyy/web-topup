@@ -10,3 +10,16 @@ export async function getAllPesananAdmin() {
 
   return data ?? [];
 }
+
+export async function getPesananDetailAdmin(orderId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .rpc("admin_get_order", { p_order_id: orderId })
+    .maybeSingle();
+
+  if (error) {
+    return null;
+  }
+
+  return data;
+}

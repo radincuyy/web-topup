@@ -200,6 +200,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_get_order: {
+        Args: { p_order_id: string }
+        Returns: {
+          created_at: string
+          customer_email: string
+          destination_data: Json
+          destination_field_type: string
+          dibatalkan_oleh: string
+          gagal_reason: string
+          harga: number
+          id: string
+          metode_pembayaran: string
+          midtrans_order_id: string
+          midtrans_transaction_id: string
+          nominal_nama: string
+          produk_nama: string
+          status: string
+          updated_at: string
+        }[]
+      }
       admin_list_orders: {
         Args: never
         Returns: {
@@ -207,12 +227,17 @@ export type Database = {
           customer_email: string
           destination_data: Json
           destination_field_type: string
+          dibatalkan_oleh: string
+          gagal_reason: string
           harga: number
           id: string
+          metode_pembayaran: string
           midtrans_order_id: string
+          midtrans_transaction_id: string
           nominal_nama: string
           produk_nama: string
           status: string
+          updated_at: string
         }[]
       }
     }

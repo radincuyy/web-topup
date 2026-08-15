@@ -45,6 +45,7 @@ export async function cancelOrderAdmin(orderId: string) {
   }
 
   revalidatePath("/admin/pesanan");
+  revalidatePath(`/admin/pesanan/${orderId}`);
   return { ok: true };
 }
 
@@ -84,6 +85,7 @@ export async function tandaiTerkirimAdmin(orderId: string) {
   }
 
   revalidatePath("/admin/pesanan");
+  revalidatePath(`/admin/pesanan/${orderId}`);
   return { ok: true };
 }
 
@@ -119,6 +121,7 @@ export async function syncOrderStatusAdmin(orderId: string) {
   );
 
   revalidatePath("/admin/pesanan");
+  revalidatePath(`/admin/pesanan/${orderId}`);
 
   if (!result.applied) {
     return { ok: true, note: result.note };

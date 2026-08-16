@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SearchableCatalog } from "@/components/features/home/searchable-catalog";
 import Image from "next/image";
-import poster from "../../public/poster.png";
+import poster from "../../../public/poster.png";
 
 const TRUST_STRIP = [
   { icon: Zap, label: "Proses instan" },

@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getPesananDetailAdmin } from "@/lib/admin/get-pesanan-admin";
@@ -54,13 +53,6 @@ async function AdminPesananDetail({
 
   return (
     <div className="flex max-w-2xl flex-col gap-6">
-      <Link
-        href="/admin/pesanan"
-        className="text-sm text-muted-foreground hover:text-foreground"
-      >
-        ← Pesanan
-      </Link>
-
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-sm text-muted-foreground">{order.customer_email}</p>

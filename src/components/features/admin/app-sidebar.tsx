@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { ADMIN_NAV } from "@/components/features/admin/nav-config";
+import { ADMIN_NAV, getActiveAdminNavItem } from "@/components/features/admin/nav-config";
 import { NavUser } from "@/components/features/admin/nav-user";
 import {
   Sidebar,
@@ -26,6 +26,7 @@ export function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar> & { user: { email: string } }) {
   const pathname = usePathname();
+  const activeItem = getActiveAdminNavItem(pathname);
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -54,7 +55,7 @@ export function AppSidebar({
               {ADMIN_NAV.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
-                    isActive={pathname.startsWith(item.url)}
+                    isActive={activeItem?.url === item.url}
                     tooltip={item.title}
                     render={<Link href={item.url} />}
                   >

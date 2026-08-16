@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { ADMIN_NAV } from "@/components/features/admin/nav-config";
+import { getActiveAdminNavItem } from "@/components/features/admin/nav-config";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -15,7 +15,7 @@ import {
 
 export function AdminBreadcrumb() {
   const pathname = usePathname();
-  const section = ADMIN_NAV.find((item) => pathname.startsWith(item.url));
+  const section = getActiveAdminNavItem(pathname);
   const isDetail = section ? pathname !== section.url : false;
 
   return (

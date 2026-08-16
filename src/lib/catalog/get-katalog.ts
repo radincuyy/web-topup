@@ -1,7 +1,9 @@
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/supabase/types";
+
+export const KATALOG_CACHE_TAG = "katalog";
 
 /**
  * Kategori/Produk are publicly readable (RLS: kategori_select_public,
@@ -19,6 +21,7 @@ function createPublicClient() {
 export async function getKatalog() {
   "use cache";
   cacheLife("minutes");
+  cacheTag(KATALOG_CACHE_TAG);
 
   const supabase = createPublicClient();
 
@@ -28,6 +31,7 @@ export async function getKatalog() {
       supabase
         .from("produk")
         .select("id, slug, nama, kategori_id, destination_field_type, urutan")
+        .eq("aktif", true)
         .order("urutan"),
       supabase
         .from("nominal")

@@ -2,6 +2,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/supabase/types";
+import { KATALOG_CACHE_TAG } from "@/lib/catalog/get-katalog";
 
 function createPublicClient() {
   return createSupabaseClient<Database>(
@@ -18,6 +19,7 @@ export async function getProdukBySlug(slug: string) {
   "use cache";
   cacheLife("minutes");
   cacheTag(produkCacheTag(slug));
+  cacheTag(KATALOG_CACHE_TAG);
 
   const supabase = createPublicClient();
 
@@ -25,6 +27,7 @@ export async function getProdukBySlug(slug: string) {
     .from("produk")
     .select("id, slug, nama, destination_field_type, kategori(nama, slug)")
     .eq("slug", slug)
+    .eq("aktif", true)
     .maybeSingle();
 
   if (!produk) {

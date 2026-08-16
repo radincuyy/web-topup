@@ -141,6 +141,7 @@ export type Database = {
       }
       produk: {
         Row: {
+          aktif: boolean
           created_at: string
           destination_field_type: string
           id: string
@@ -150,6 +151,7 @@ export type Database = {
           urutan: number
         }
         Insert: {
+          aktif?: boolean
           created_at?: string
           destination_field_type: string
           id?: string
@@ -159,6 +161,7 @@ export type Database = {
           urutan?: number
         }
         Update: {
+          aktif?: boolean
           created_at?: string
           destination_field_type?: string
           id?: string

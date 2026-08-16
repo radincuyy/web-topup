@@ -1,21 +1,19 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AlertCircle, Pencil, Plus, Trash2 } from "lucide-react";
 
 import {
-  createNominal,
-  deleteNominal,
-  setNominalTersedia,
-  updateNominal,
-} from "@/lib/admin/produk-actions";
+  createKategori,
+  deleteKategori,
+  updateKategori,
+} from "@/lib/admin/kategori-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -45,64 +43,58 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-type Nominal = {
+type Kategori = {
   id: string;
   nama: string;
-  harga: number;
-  tersedia: boolean;
+  slug: string;
   urutan: number;
 };
 
-const nominalFormSchema = z.object({
+const kategoriFormSchema = z.object({
   nama: z.string().min(1, "Nama wajib diisi"),
-  harga: z.coerce.number().int().positive("Harga harus lebih dari 0"),
+  slug: z
+    .string()
+    .min(1, "Slug wajib diisi")
+    .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Slug hanya boleh huruf kecil, angka, dan tanda hubung"),
   urutan: z.coerce.number().int().min(0, "Urutan minimal 0"),
 });
 
-type NominalFormValues = z.infer<typeof nominalFormSchema>;
+type KategoriFormValues = z.infer<typeof kategoriFormSchema>;
 
-export function NominalManager({
-  produkId,
-  produkSlug,
-  nominalList,
-}: {
-  produkId: string;
-  produkSlug: string;
-  nominalList: Nominal[];
-}) {
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export function KategoriManager({ kategoriList }: { kategoriList: Kategori[] }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium">Nominal</h2>
-        <NominalDialog produkId={produkId} produkSlug={produkSlug} />
+        <h1 className="text-xl font-semibold">Kategori</h1>
+        <KategoriDialog />
       </div>
 
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Nama</TableHead>
-            <TableHead>Harga</TableHead>
+            <TableHead>Slug</TableHead>
             <TableHead>Urutan</TableHead>
-            <TableHead>Tersedia</TableHead>
             <TableHead className="text-right">Aksi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {nominalList.length === 0 ? (
+          {kategoriList.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground">
-                Belum ada nominal.
+              <TableCell colSpan={4} className="text-center text-muted-foreground">
+                Belum ada kategori.
               </TableCell>
             </TableRow>
           ) : (
-            nominalList.map((n) => (
-              <NominalRow
-                key={n.id}
-                nominal={n}
-                produkId={produkId}
-                produkSlug={produkSlug}
-              />
-            ))
+            kategoriList.map((k) => <KategoriRow key={k.id} kategori={k} />)
           )}
         </TableBody>
       </Table>
@@ -110,36 +102,12 @@ export function NominalManager({
   );
 }
 
-function NominalRow({
-  nominal,
-  produkId,
-  produkSlug,
-}: {
-  nominal: Nominal;
-  produkId: string;
-  produkSlug: string;
-}) {
-  const [isPending, startTransition] = useTransition();
-  const [tersedia, setTersedia] = useState(nominal.tersedia);
+function KategoriRow({ kategori }: { kategori: Kategori }) {
   const [deleteError, setDeleteError] = useState<string | null>(null);
-
-  function toggleTersedia(checked: boolean) {
-    setTersedia(checked);
-    startTransition(async () => {
-      const result = await setNominalTersedia({
-        nominalId: nominal.id,
-        produkSlug,
-        tersedia: checked,
-      });
-      if (result.error) {
-        setTersedia(!checked);
-      }
-    });
-  }
 
   async function handleDelete() {
     setDeleteError(null);
-    const result = await deleteNominal({ nominalId: nominal.id, produkSlug });
+    const result = await deleteKategori(kategori.id);
     if (result.error) {
       setDeleteError(result.error);
     }
@@ -147,31 +115,20 @@ function NominalRow({
 
   return (
     <TableRow>
-      <TableCell className="font-medium">{nominal.nama}</TableCell>
-      <TableCell>Rp{nominal.harga.toLocaleString("id-ID")}</TableCell>
-      <TableCell>{nominal.urutan}</TableCell>
-      <TableCell>
-        <Switch
-          checked={tersedia}
-          onCheckedChange={toggleTersedia}
-          disabled={isPending}
-        />
-      </TableCell>
+      <TableCell className="font-medium">{kategori.nama}</TableCell>
+      <TableCell className="text-muted-foreground">{kategori.slug}</TableCell>
+      <TableCell>{kategori.urutan}</TableCell>
       <TableCell className="text-right">
         <div className="flex justify-end gap-2">
-          <NominalDialog
-            produkId={produkId}
-            produkSlug={produkSlug}
-            nominal={nominal}
-          />
+          <KategoriDialog kategori={kategori} />
           <AlertDialog onOpenChange={() => setDeleteError(null)}>
             <AlertDialogTrigger render={<Button variant="outline" size="icon-sm" />}>
               <Trash2 />
-              <span className="sr-only">Hapus {nominal.nama}</span>
+              <span className="sr-only">Hapus {kategori.nama}</span>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Hapus nominal {nominal.nama}?</AlertDialogTitle>
+                <AlertDialogTitle>Hapus kategori {kategori.nama}?</AlertDialogTitle>
                 <AlertDialogDescription>
                   Tindakan ini tidak bisa diurungkan.
                 </AlertDialogDescription>
@@ -197,33 +154,42 @@ function NominalRow({
   );
 }
 
-function NominalDialog({
-  produkId,
-  produkSlug,
-  nominal,
-}: {
-  produkId: string;
-  produkSlug: string;
-  nominal?: Nominal;
-}) {
-  const isEdit = !!nominal;
+function KategoriDialog({ kategori }: { kategori?: Kategori }) {
+  const isEdit = !!kategori;
   const [open, setOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [slugTouched, setSlugTouched] = useState(isEdit);
   const {
     register,
     handleSubmit,
+    setValue,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<z.input<typeof nominalFormSchema>, unknown, NominalFormValues>({
-    resolver: zodResolver(nominalFormSchema),
-    defaultValues: nominal ?? { nama: "", harga: 0, urutan: 0 },
+  } = useForm<z.input<typeof kategoriFormSchema>, unknown, KategoriFormValues>({
+    resolver: zodResolver(kategoriFormSchema),
+    defaultValues: kategori ?? { nama: "", slug: "", urutan: 0 },
   });
 
-  async function onSubmit(values: NominalFormValues) {
+  const { onChange: onNamaChange, ...namaField } = register("nama");
+  const { onChange: onSlugChange, ...slugField } = register("slug");
+
+  function handleNamaChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onNamaChange(e);
+    if (!slugTouched) {
+      setValue("slug", slugify(e.target.value));
+    }
+  }
+
+  function handleSlugChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onSlugChange(e);
+    setSlugTouched(true);
+  }
+
+  async function onSubmit(values: KategoriFormValues) {
     setServerError(null);
     const result = isEdit
-      ? await updateNominal({ nominalId: nominal.id, produkSlug, ...values })
-      : await createNominal({ produkId, produkSlug, ...values });
+      ? await updateKategori({ id: kategori.id, ...values })
+      : await createKategori(values);
     if (result.error) {
       setServerError(result.error);
       return;
@@ -232,7 +198,7 @@ function NominalDialog({
     setOpen(false);
   }
 
-  const formId = isEdit ? `edit-nominal-${nominal.id}` : "add-nominal-form";
+  const formId = isEdit ? `edit-kategori-${kategori.id}` : "add-kategori-form";
 
   return (
     <Dialog
@@ -254,18 +220,18 @@ function NominalDialog({
         {isEdit ? (
           <>
             <Pencil />
-            <span className="sr-only">Ubah {nominal.nama}</span>
+            <span className="sr-only">Ubah {kategori.nama}</span>
           </>
         ) : (
           <>
             <Plus data-icon="inline-start" />
-            Tambah Nominal
+            Tambah Kategori
           </>
         )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEdit ? `Ubah ${nominal.nama}` : "Tambah Nominal"}</DialogTitle>
+          <DialogTitle>{isEdit ? `Ubah ${kategori.nama}` : "Tambah Kategori"}</DialogTitle>
         </DialogHeader>
         <form
           id={formId}
@@ -284,25 +250,26 @@ function NominalDialog({
             <Label htmlFor={`${formId}-nama`}>Nama</Label>
             <Input
               id={`${formId}-nama`}
-              placeholder="86 Diamond"
+              placeholder="Game"
               aria-invalid={!!errors.nama}
-              {...register("nama")}
+              {...namaField}
+              onChange={handleNamaChange}
             />
             {errors.nama ? (
               <p className="text-sm text-destructive">{errors.nama.message}</p>
             ) : null}
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`${formId}-harga`}>Harga (Rp)</Label>
+            <Label htmlFor={`${formId}-slug`}>Slug</Label>
             <Input
-              id={`${formId}-harga`}
-              type="number"
-              placeholder="20000"
-              aria-invalid={!!errors.harga}
-              {...register("harga")}
+              id={`${formId}-slug`}
+              placeholder="game"
+              aria-invalid={!!errors.slug}
+              {...slugField}
+              onChange={handleSlugChange}
             />
-            {errors.harga ? (
-              <p className="text-sm text-destructive">{errors.harga.message}</p>
+            {errors.slug ? (
+              <p className="text-sm text-destructive">{errors.slug.message}</p>
             ) : null}
           </div>
           <div className="flex flex-col gap-1.5">

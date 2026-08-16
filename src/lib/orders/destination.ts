@@ -8,6 +8,24 @@ export type DestinationFieldType =
   | "phone_number"
   | "meter_number";
 
+export const DESTINATION_FIELD_TYPES = [
+  "ml_id_zone",
+  "user_id",
+  "riot_id",
+  "roblox_username",
+  "phone_number",
+  "meter_number",
+] as const satisfies readonly DestinationFieldType[];
+
+export const destinationFieldTypeLabels: Record<DestinationFieldType, string> = {
+  ml_id_zone: "ID Game + Zone (mis. Mobile Legends)",
+  user_id: "User ID",
+  riot_id: "Riot ID (Username#Tag)",
+  roblox_username: "Username Roblox",
+  phone_number: "Nomor HP (Pulsa)",
+  meter_number: "Nomor Meter (Token PLN)",
+};
+
 export const destinationSchemas = {
   ml_id_zone: z.object({
     userId: z.string().min(1, "User ID wajib diisi"),

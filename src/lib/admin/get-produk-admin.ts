@@ -5,7 +5,7 @@ export async function getAllProdukAdmin() {
 
   const { data: produk } = await supabase
     .from("produk")
-    .select("id, slug, nama, urutan, kategori(nama, slug)")
+    .select("id, slug, nama, urutan, aktif, kategori(nama, slug)")
     .order("urutan");
 
   return produk ?? [];
@@ -16,7 +16,9 @@ export async function getProdukWithNominalAdmin(slug: string) {
 
   const { data: produk } = await supabase
     .from("produk")
-    .select("id, slug, nama, destination_field_type, kategori(nama, slug)")
+    .select(
+      "id, slug, nama, destination_field_type, kategori_id, urutan, aktif, kategori(nama, slug)",
+    )
     .eq("slug", slug)
     .maybeSingle();
 
